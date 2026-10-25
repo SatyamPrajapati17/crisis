@@ -36,15 +36,17 @@ const sendTemplatedEmail = (
     );
   }
 
-  const collectVariableNames = (value: Record<string, unknown>, prefix = ''): string[] =>
-    Object.entries(value).flatMap(([key, nested]) => {
+  const collectVariableNames = (value: Record<string, unknown>, prefix = ''): string[] => {
+    const names: string[] = [];
+    for (const [key, nested] of Object.entries(value)) {
       const name = prefix ? `${prefix}.${key}` : key;
-
-      // Nested values are expanded so a template can read `user.firstname` as well as `user`.
-      return nested !== null && typeof nested === 'object'
-        ? [name, ...collectVariableNames(nested as Record<string, unknown>)]
-        : [name];
-    });
+      names.push(name);
+      if (nested !== null && typeof nested === 'object') {
+        names.push(...collectVariableNames(nested as Record<string, unknown>, name));
+      }
+    }
+    return names;
+  };
 
   const allowedInterpolationVariables = collectVariableNames(data as Record<string, unknown>);
   const interpolate = createStrictInterpolationRegExp(allowedInterpolationVariables, 'g');
