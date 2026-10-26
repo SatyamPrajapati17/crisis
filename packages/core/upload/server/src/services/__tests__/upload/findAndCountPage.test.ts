@@ -108,6 +108,26 @@ describe('findAndCountPage', () => {
     expect(pagination).toEqual({ start: 20, limit: 5, total: 42 });
   });
 
+  test('offset-based: only limit provided returns offset pagination meta', async () => {
+    const { pagination } = await uploadService.findAndCountPage({
+      pagination: { limit: 2 },
+    });
+
+    const [, query] = transform.mock.calls[0];
+    expect(query).toMatchObject({ start: 0, limit: 2 });
+    expect(pagination).toEqual({ start: 0, limit: 2, total: 42 });
+  });
+
+  test('offset-based: only start provided returns offset pagination meta', async () => {
+    const { pagination } = await uploadService.findAndCountPage({
+      pagination: { start: 2 },
+    });
+
+    const [, query] = transform.mock.calls[0];
+    expect(query).toMatchObject({ start: 2, limit: 25 });
+    expect(pagination).toEqual({ start: 2, limit: 25, total: 42 });
+  });
+
   test('withCount=false skips the count query and omits total/pageCount', async () => {
     const { pagination } = await uploadService.findAndCountPage({
       pagination: { page: 1, pageSize: 10, withCount: 'false' },
