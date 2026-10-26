@@ -1,6 +1,29 @@
 import { relationsOrderer } from '../relations-orderer';
 
 describe('Given I have some relations in the database', () => {
+  describe('When I connect a relation at the start of existing relations', () => {
+    test('Then it is placed before the existing head', () => {
+      const orderer = relationsOrderer(
+        [
+          { id: 1, order: 1 },
+          { id: 2, order: 2 },
+        ],
+        'id',
+        'order'
+      );
+
+      orderer.connect([{ id: 3, position: { start: true } }]);
+
+      const orderMap = orderer.getOrderMap();
+      expect(orderMap[3]).toBeLessThan(1);
+      expect(orderer.get()).toMatchObject([
+        { id: 3, order: 0.5 },
+        { id: 1, order: 1 },
+        { id: 2, order: 2 },
+      ]);
+    });
+  });
+
   describe('When I connect a relation at the end', () => {
     test('Then it is placed at the end with the correct order', () => {
       const orderer = relationsOrderer(

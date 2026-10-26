@@ -223,18 +223,14 @@ const relationsOrderer = <TRelation extends Record<string, ID | number | null>>(
       }
       idx = afterIdx + 1;
     } else if (r.position?.start) {
-      const [head, follower] = computedRelations;
+      const [head] = computedRelations;
 
       if (!head) {
         r.order = 0.5;
       } else if (!head.init) {
         r.order = head.order;
       } else {
-        // Take the middle of the gap the head opens on the list, so the new
-        // order stays strictly inside the range the stored rows already use.
-        const upperBound = follower ? follower.order : head.order + 1;
-
-        r.order = (head.order + upperBound) / 2;
+        r.order = head.order - 0.5;
       }
 
       idx = 0;
