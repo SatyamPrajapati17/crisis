@@ -74,6 +74,24 @@ describe('convert-query-params', () => {
       expect(res).toEqual(expectedOutput);
     });
 
+    test.each<[string, object, object]>([
+      ['$null true', { title: { $null: true } }, { title: { $null: true } }],
+      ['$null false', { title: { $null: false } }, { title: { $null: false } }],
+      ['$null string true', { title: { $null: 'true' } }, { title: { $null: true } }],
+      ['$null string false', { title: { $null: 'false' } }, { title: { $null: false } }],
+      ['$null string 1', { title: { $null: '1' } }, { title: { $null: true } }],
+      ['$null string 0', { title: { $null: '0' } }, { title: { $null: false } }],
+      ['$notNull true', { title: { $notNull: true } }, { title: { $null: false } }],
+      ['$notNull false', { title: { $notNull: false } }, { title: { $null: true } }],
+      ['$notNull string true', { title: { $notNull: 'true' } }, { title: { $null: false } }],
+      ['$notNull string false', { title: { $notNull: 'false' } }, { title: { $null: true } }],
+      ['$notNull string 1', { title: { $notNull: '1' } }, { title: { $null: false } }],
+      ['$notNull string 0', { title: { $notNull: '0' } }, { title: { $null: true } }],
+    ])('normalizes null operators: %s', (key, input, expectedOutput) => {
+      const res = transformer.private_convertFiltersQueryParams(input, models['api::dog.dog']);
+      expect(res).toEqual(expectedOutput);
+    });
+
     // test filters that should be removed
     test.each<[string, object]>([
       ['invalid attribute', { invAttribute: 'test' }],
