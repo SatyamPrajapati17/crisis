@@ -14,6 +14,7 @@ const RELATION_LAB_UID = 'api::relation-lab.relation-lab';
 
 describe('document-manager', () => {
   const findMany = jest.fn();
+  const count = jest.fn();
   const sumDraftCountsMock = sumDraftCounts as jest.MockedFunction<typeof sumDraftCounts>;
   const getDeepPopulateDraftCountMock = getDeepPopulateDraftCount as jest.MockedFunction<
     typeof getDeepPopulateDraftCount
@@ -21,6 +22,7 @@ describe('document-manager', () => {
 
   beforeEach(() => {
     findMany.mockReset();
+    count.mockReset();
     sumDraftCountsMock.mockReset();
     getDeepPopulateDraftCountMock.mockReturnValue({
       populate: { manyToManyBi: true },
@@ -30,6 +32,7 @@ describe('document-manager', () => {
     global.strapi = {
       documents: jest.fn(() => ({
         findMany,
+        count,
       })),
     } as any;
   });
@@ -66,6 +69,41 @@ describe('document-manager', () => {
 
       expect(total).toBe(0);
       expect(findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findPage', () => {
+    it('passes search query (_q) and filters to count', async () => {
+      findMany.mockResolvedValue([{ documentId: 'doc-1' }, { documentId: 'doc-2' }]);
+      count.mockResolvedValue(2);
+
+      const service = documentManager({ strapi: global.strapi });
+      const result = await service.findPage(
+        {
+          _q: 'needle',
+          filters: { name: { $startsWith: 'needle' } },
+          locale: 'en',
+          status: 'draft',
+          sort: 'createdAt:DESC',
+          populate: ['author'],
+          page: 1,
+          pageSize: 10,
+        },
+        RELATION_LAB_UID
+      );
+
+      expect(count).toHaveBeenCalledWith({
+        _q: 'needle',
+        filters: { name: { $startsWith: 'needle' } },
+        locale: 'en',
+        status: 'draft',
+      });
+      expect(result.pagination).toEqual({
+        page: 1,
+        pageSize: 10,
+        pageCount: 1,
+        total: 2,
+      });
     });
   });
 });
